@@ -22,7 +22,8 @@ def find_y_positions_of_gray_lines(byte_data, start_y=0):
     image = Image.open(BytesIO(byte_data))
     line_positions = []
 
-    for y in range(start_y, image.height):
+    y = start_y
+    while y < image.height:
         x_pos = 134
         pixel = image.getpixel((x_pos, y))
 
@@ -38,6 +39,10 @@ def find_y_positions_of_gray_lines(byte_data, start_y=0):
             if flag:
                 line_positions.append(y)
                 y += 10
+            else:
+                y += 1
+        else:
+            y += 1
 
     return line_positions
 
