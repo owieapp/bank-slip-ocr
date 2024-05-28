@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class SlipModel:
+class ReceiptModel:
     reference_number: str
     transaction_date: str
     from_user: str
