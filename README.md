@@ -2,6 +2,23 @@
 
 A package to extract details from BML transfer receipts.
 
+# Installation
+
+```bash
+pip install -i https://test.pypi.org/simple/ bml-ocr==0.1.0
+```
+
+# Usage
+
+```python
+from bml_ocr.extract import extract_receipt_data
+from bml_ocr.receipt_model import ReceiptModel
+
+with open('datasets/receipt_1.jpg', 'rb') as f:
+    receipt: ReceiptModel = extract_receipt_data(f.read())
+    print(receipt)
+```
+
 ## How it works
 
 The `extract_receipt_data` function is where OCR and data extraction takes place. This function returns a [ReceiptModel](https://github.com/owieapp/bml_ocr/blob/main/bml_ocr/receipt_model.py).

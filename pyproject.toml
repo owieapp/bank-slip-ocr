@@ -3,7 +3,7 @@ name = "bml-ocr"
 version = "0.1.0"
 description = "A package to extract details from BML transfer receipts."
 authors = ["Naffah Abdulla Rasheed <mail@naffah.me>"]
-license = "MIT"
+license = "MIT License"
 readme = "README.md"
 
 [tool.poetry.dependencies]
@@ -18,3 +18,7 @@ python-levenshtein = "^0.25.1"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[project.urls]
+Homepage = "https://github.com/owieapp/bml_ocr"
+Issues = "https://github.com/owieapp/bml_ocr/issues"
