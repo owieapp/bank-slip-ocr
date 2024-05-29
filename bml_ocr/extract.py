@@ -12,15 +12,16 @@ def is_white(pixel):
     return True
 
 
-def find_y_positions_of_gray_lines(byte_data, start_y=0):
+def find_y_values_of_gray_lines(byte_data, start_y=0):
     """
     Find the y axis values for gray lines in the image
 
     Args:
         byte_data (bytes): Image byte data
+        start_y (int): Starting y axis value when iterating pixels
     """
     image = Image.open(BytesIO(byte_data))
-    line_positions = []
+    y_values = []  # List of y axis values for gray lines
 
     y = start_y
     while y < image.height:
@@ -37,14 +38,14 @@ def find_y_positions_of_gray_lines(byte_data, start_y=0):
                     break
 
             if flag:
-                line_positions.append(y)
+                y_values.append(y)
                 y += 10
             else:
                 y += 1
         else:
             y += 1
 
-    return line_positions
+    return y_values
 
 
 def find_closest_match(data, word):
@@ -55,16 +56,72 @@ def find_closest_match(data, word):
     return data[closest_match_index]
 
 
+def find_values_between(start_y, end_y, data):
+    values = []
+    for entry in data:
+        if start_y < entry[0][0][1] < end_y:
+            values.append(entry[1])
+
+    return values
+
+
 def extract_receipt_data(byte_data):
+    """Extracts text from receipt data and returns a dictionary
+
+    Args:
+        byte_data (bytes): Image byte data
+
+    Returns:
+        dict: Extracted receipt data
+    """
     reader = easyocr.Reader(['en'], gpu=True)
     result = reader.readtext(byte_data)
     closest_match = find_closest_match(result, 'Message')
 
-    line_positions = find_y_positions_of_gray_lines(byte_data, closest_match[0][0][1])
-    print(line_positions)
-    # keys = ['Reference', 'Transaction date', 'From', 'To', 'Amount', 'Remarks']
+    lines_y_values = find_y_values_of_gray_lines(byte_data, closest_match[0][0][1])
+
+    keys = [
+        ('Reference', 0, 1),
+        ('Transaction date', 1, 2),
+        ('From', 2, 3),
+        ('To', 3, 4),
+        ('Amount', 4, 5),
+        ('Remarks', 5, 6)
+    ]
+
+    data = {}
+    for key in keys:
+        text = key[0]
+        start_y = lines_y_values[key[1]]
+        end_y = lines_y_values[key[2]]
+
+        closest_match = find_closest_match(result, text)
+        section_values = find_values_between(start_y, end_y, result)
+        # Remove key from section values
+        if len(section_values) > 0:
+            index = section_values.index(closest_match[1])
+            section_values.pop(index)
+
+        if text == 'Reference':
+            data['reference_number'] = section_values[0]
+        elif text == 'Transaction date':
+            data['transaction_date'] = section_values[0]
+        elif text == 'From':
+            data['from'] = section_values[0]
+        elif text == 'To':
+            data['to_user'] = section_values[0]
+            data['to_account'] = section_values[1]
+        elif text == 'Amount':
+            data['amount'] = section_values[0]
+        elif text == 'Remarks':
+            if len(section_values) > 0:
+                combined_text = ' '.join(section_values)
+                data['remarks'] = combined_text
+
+    return data
 
 
 if __name__ == '__main__':
-    with open('datasets/receipt_3.jpg', 'rb') as f:
-        extract_receipt_data(f.read())
+    with open('datasets/receipt_1.jpg', 'rb') as f:
+        receipt_data = extract_receipt_data(f.read())
+        print(receipt_data)
