@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bml-ocr"
-version = "0.1.0"
+version = "0.1.1"
 description = "A package to extract details from BML transfer receipts."
 authors = ["Naffah Abdulla Rasheed <mail@naffah.me>"]
 license = "MIT License"

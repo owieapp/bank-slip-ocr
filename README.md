@@ -5,7 +5,7 @@ A package to extract details from BML transfer receipts.
 # Installation
 
 ```bash
-pip install -i https://test.pypi.org/simple/ bml-ocr==0.1.0
+pip install bml-ocr
 ```
 
 # Usage
