@@ -1,3 +1,6 @@
+import random
+from typing import Callable
+
 import easyocr
 import Levenshtein
 from PIL import Image
@@ -14,11 +17,48 @@ def is_white(pixel):
     return True
 
 
-def find_y_values_of_gray_lines(byte_data, start_y=0):
+def is_black(pixel):
+    for color in pixel:
+        if color > 35:
+            return False
+
+    return True
+
+
+def is_black_or_white(image: Image) -> bool:
+    """
+    Returns true if white
+    Args:
+        image: image
+
+    Returns: if white
+
+    """
+    width, height = image.size
+
+    white = 0
+    black = 0
+
+    for x in range(500):
+        # Generate random coordinates
+        x_cor = random.randint(0, width - 1)
+        y_cor = random.randint(0, height - 1)
+        pixel = image.getpixel((x_cor, y_cor))
+
+        if is_white(pixel):
+            white += 1
+        elif is_black(pixel):
+            black += 1
+
+    return white > black
+
+
+def find_y_values_of_gray_lines(color_detector: Callable, byte_data, start_y=0, ):
     """
     Find the y axis values for gray lines in the image
 
     Args:
+        color_detector: the function that can detect lines
         byte_data (bytes): Image byte data
         start_y (int): Starting y axis value when iterating pixels
     """
@@ -30,12 +70,12 @@ def find_y_values_of_gray_lines(byte_data, start_y=0):
         x_pos = 134
         pixel = image.getpixel((x_pos, y))
 
-        if not is_white(pixel):
+        if not color_detector(pixel):
             flag = True
 
             for x in range(x_pos, x_pos + 50):
                 pixel = image.getpixel((x, y))
-                if is_white(pixel):
+                if color_detector(pixel):
                     flag = False
                     break
 
@@ -80,7 +120,14 @@ def extract_receipt_data(byte_data):
     result = reader.readtext(byte_data)
     closest_match = find_closest_match(result, 'Message')
 
-    lines_y_values = find_y_values_of_gray_lines(byte_data, closest_match[0][0][1])
+    image = Image.open(BytesIO(byte_data))
+    bg_is_white = is_black_or_white(image)
+    if bg_is_white:
+        detector = is_white
+    else:
+        detector = is_black
+
+    lines_y_values = find_y_values_of_gray_lines(detector, byte_data, closest_match[0][0][1])
 
     keys = [
         ('Reference', 0, 1),
@@ -124,6 +171,25 @@ def extract_receipt_data(byte_data):
 
 
 if __name__ == '__main__':
-    with open('datasets/receipt_1.jpg', 'rb') as f:
+    import os
+    files = os.listdir('data')
+
+    with open("data/18b.jpg", 'rb') as f:
         receipt: ReceiptModel = extract_receipt_data(f.read())
-        print(receipt)
+
+    # success = 0
+    # failed = 0
+    # for file in files:
+    #     _path = f"data/{file}"
+    #
+    #     with open(_path, 'rb') as f:
+    #         try:
+    #             receipt: ReceiptModel = extract_receipt_data(f.read())
+    #             success += 1
+    #             print(f"Succeeded {receipt} {_path}")
+    #         except Exception as e:
+    #             failed += 1
+    #             print(f"Failed {e} {_path}")
+    #
+    # print(f"Success: {success}")
+    # print(f"Failed: {failed}")
